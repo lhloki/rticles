@@ -21,6 +21,7 @@ acm_article <- function(...) {
   pdf_document_format(...,
                       format = "acm_article",
                       template = "template.tex",
+                      latex_engine = "xelatex",
                       csl = "acm-sig-proceedings.csl")
 }
 

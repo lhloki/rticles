@@ -12,18 +12,18 @@
 #'
 #' \dontrun{
 #' library(rmarkdown)
-#' draft("MyArticle.Rmd", template = "acs_article", package = "rticles")
+#' draft("MyArticle.Rmd", template = "fund_review", package = "rticles")
 #' }
 #'
 #' @export
-acs_article <- function(...,
+fund_review <- function(...,
                         keep_tex = TRUE,
                         md_extensions = c("-autolink_bare_uris"),
                         fig_caption = TRUE){
   pdf_document_format(...,
                       keep_tex = keep_tex,
                       md_extensions = md_extensions,
-                      format = "acs_article",
+                      format = "fund_review",
                       template = "template.tex",
                       latex_engine = "xelatex",
                       csl = "american-chemical-society.csl",

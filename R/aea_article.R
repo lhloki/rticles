@@ -22,5 +22,6 @@ aea_article <- function(...,
   inherit_pdf_document(...,
                        template = find_resource("aea_article", "template.tex"),
                        keep_tex = keep_tex,
+                       latex_engine = "xelatex",
                        md_extensions = md_extensions)
 }

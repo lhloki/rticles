@@ -1,0 +1,94 @@
+---
+journal: jacsat
+type: article
+author:
+  - name: 蓝海
+    altaff: "我们认真科学分析金融的规律"
+    email: \email{lh_loki@163.com}
+    phone: 13127900572
+  - name: 彭莉
+   
+title:
+  formatted: XXX简评\footnote{详尽的数据分析与记录请联系作者索取《基金管理人分析技术文档》}
+  short: XXX
+
+keywords: 价值投资, PB-ROE
+abstract: |
+  XXX在过去的XX表现XXXXX
+
+  我们认为XXX是典型的XXXX，其具备xxxxxxxx的特点，适合xxxxxxxx的市场。
+
+bibliography: acstest.bib
+output: rticles::fund_review
+---
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, render=TRUE,fig.width=4,fig.cap='基金累计回报率与回撤',cache=TRUE}
+require(CAsset)
+require(PerformanceAnalytics)
+init()
+options(digits=2)
+pdf.options(family = "GB1")
+fund.codes=c('166005','002685','001810','519165','519093','519089','519087')
+fund.names=c('中欧价值发现混合A','中欧丰泓沪港深混合A','中欧潜力价值灵活配置混合','新华鑫利灵活配置','新华钻石品质企业混合','新华优选成长混合','新华优选分红混合')
+froms=c('2015-11-20','2016-11-08','2015-11-20','2014-04-23','2010-02-03','2008-07-25','2006-07-12')
+tos=c(as.character(Sys.Date()),as.character(Sys.Date()),as.character(Sys.Date()),'2015-05-20','2015-06-09','2009-08-25','2015-06-09')
+fund.constraints=list(list(stock=c(0.6,0.95),bond=c(0,0.35),cash=0.05),list(stock=c(0,0.95),bond=c(0,0.95),cash=0.05),list(stock=c(0.6,0.95),bond=c(0,0.35),cash=0.05),list(stock=c(0.2,0.95),bond=c(0,1,0.80),cash=0.05))
+funds=getFunds(codes=fund.codes[c(1,2)],fund.names=fund.names[c(1,2)],from=froms[1])
+data(asset_top_daily)
+hs300<-getReturnFromDB('000300',from=(as.Date(froms[1])-60))
+colnames(hs300)<-'沪深300'
+funds = merge(funds,hs300,join='left')
+charts.PerformanceSummary(funds,event.labels=c('管理基金'),event.lines=froms[c(1,2)])
+knitr::kable(fund.performance(funds)[,c(-5,-6)],digits=2,col.names=c('名称','近半年','夏普率','近一年','夏普率','近两年','夏普率'))
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, render=TRUE,fig.width=4,fig.cap='投资者收益风险比较'}
+fund.performance(funds,flag=3)
+```
+
+# 简介
+基金经理人介绍
+
+# 风格评述
+
+XXX的风格集中表现为：
+\begin{itemize}
+\item 交易风格：
+\item 持仓风格：
+\item 主动性风格：
+\end{itemize}
+以下，我们具体的一一介绍。
+
+
+
+# 能力评价\footnote{运气能够带来超常表现，持续的好运则可以归结为能力!}
+
+我们讲持续的超额表现归因为
+\begin{equation}
+\mbox{大类资产配置能力} + \mbox{行业配置能力（股票类）}+ \mbox{择股能力} + \mbox{择时能力} \Rightarrow \mbox{超额收益}
+\end{equation}
+
+\begin{table}
+  \begin{tabular}{l|llll}
+    因子 &大类资产配置  & 行业配置  & 择股能力 & 择时能力  \\ \hline
+    贡献收益 & $0.56\%$   & $-1.28\%$ & $18.42\%$ &  $20.76\%$  \\
+    评价 & 弱 & 无 & 超强 & 强健  \\ \hline
+  \end{tabular}
+\end{table}
+
+
+# 投资策略简述
+
+
+
+\begin{acknowledgement}
+
+在我们的分析中，使用了公开数据与部分非公开数据，在此基础上采用基于净值的风格分析，基于持仓的收益归因对基金管理人的业绩表现进行了科学的分析。我们历尽所能的使用了最为完整与详实的数据、最为科学的方法，以最为严谨的态度做出尽量客观的评价。同时我们也实地进行调研与基金经理人进行了多次的交流。在此，对于向我们提供数据与交流机会的相关人员致谢。需要根伟详细的技术分析报告，请与本文作者联系。
+
+\end{acknowledgement}
+
+
+## 参考文献
+
+

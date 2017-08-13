@@ -24,5 +24,6 @@ ams_article <- function(...,
                       md_extensions = md_extensions,
                       format = "ams_article",
                       template = "template.tex",
+                      latex_engine = "xelatex",
                       csl = "american-meteorological-society.csl")
 }

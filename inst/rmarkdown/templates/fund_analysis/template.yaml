@@ -1,0 +1,5 @@
+name: Fund Analysis Documents
+description: >
+ Template for analyze fund manager in R and write report in Chinese.
+create_dir: true
+
