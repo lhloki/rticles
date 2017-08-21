@@ -1,3 +1,7 @@
+### CLAIM
+This in a modification of the well-known rticles package. Two new templates are introduced to help analyze Fund managers. 
+As those templates are not widely accepted, I forked the rticles and include the modified version here, not the original place.
+I have no attention to claim this is my original work. All credits should go to the original authors.
 
 ### Installation
 
