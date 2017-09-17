@@ -1,5 +1,5 @@
 ---
-title: "分析王培-技术报告"
+title: "分析XXX-技术报告"
 author:
   - 蓝海
   - 彭莉
@@ -15,10 +15,28 @@ classoption: "hyperref,"
 ```{r, echo=FALSE,message=FALSE,warning=FALSE}
 require(CAsset)
 require(PerformanceAnalytics)
+require(knitr)
 init()
 options(digits=2)
 pdf.options(family = "GB1")
-manager='王培'
+manager='XXX'
+if(manager='XXX')
+  stop('请输入基金管理人名字')
+sqlstr=sprintf("select name) from fund_manager where name='%s'",manager)
+if(sqldf(sqlstr)[1,1]>1)
+  
+sqlstr=sprintf("select a.*,b.name from managed_funds a left join fund_manager b on a.manager_code=b.code where b.name='%s'",manager)
+fund.df = sqldf(sqlstr)
+if(sum(is.na(fund.df$manage_to))>0)
+{
+  new.life=Sys.Date()-fund.df$manage_from[is.na(fund.df$manage_to)]
+  max.new.life = max(new.life)
+  if(max.new.life>270)
+  {
+    
+  }
+}
+fund.df$manage_to[is.na(fund.df$manage_to)]=Sys.Date() 
 fund.codes=c('519668','161507','519674','166006')
 fund.names=c('银河成长混合','银河300成长分级','银河创新成长混合','中欧行业成长混合')
 froms=c('2013-10-30','2013-05-08','2011-06-03','2016-01-08')
@@ -195,164 +213,47 @@ knitr::kable(df[,c(1,seq(8,15))],digits=2,col.names=c('日期','行业前5占比
 
 
 
-## 持仓风格：小盘成长到大盘价值
+## 持仓风格：
 
-### `r fund.names[4]`
-
-```{r, echo=FALSE,cache=TRUE, message=FALSE, warning=FALSE, render=TRUE,fig.width=10}
-i=4
-  model<-fund_holding_style(fund.codes[i],from=froms[i],to=tos[i],frequency='monthly',style=1,constraint=fund.constraints[[i]])
-  params<-model$coefficients[model$coefficients>0.0001]
-  facters<-model$factors[model$coefficients>0.0001]
-  
-  formula<-as.data.frame(matrix(params*100,1,length(params)))
-  colnames(formula)<-facters
-  knitr::kable(formula,digits=2,caption='持仓风格权重分析(%)')
-  
-  pie(params,facters)
-
+```{r,echo=FALSE}
+out=''
+for(i in 1:length(fund.codes))
+{
+  out=c(out,knit_expand('holding-style.rmd'))
+}
 ```
-
-尽管成长任然是主色调，但是可以看见大盘价值作为第二大因子出现，而且所谓的成长股中，也是配置的大盘或者中盘成长，而不是以前的小盘成长。这是基金经理主动适应市场的变化，是学习型基金管理人的重要标志。
-
-基于净值数据，我们对`r manager`在银河基金中的两支基金的持仓风格分析如下（增强基金由于投资范围的限制，无需分析）。
-
-### `r fund.names[1]`
-
-```{r, echo=FALSE,cache=TRUE, message=FALSE, warning=FALSE, render=TRUE,fig.width=10}
-i=1
-  model<-fund_holding_style(fund.codes[i],from=froms[i],to=tos[i],frequency='monthly',style=1,constraint=fund.constraints[[i]])
-  params<-model$coefficients[model$coefficients>0.0001]
-  facters<-model$factors[model$coefficients>0.0001]
-  
-  formula<-as.data.frame(matrix(params*100,1,length(params)))
-  colnames(formula)<-facters
-  knitr::kable(formula,digits=2,caption='持仓风格权重分析(%)')
-  
-  pie(params,facters)
-
-```
-
-### `r fund.names[3]`
-
-```{r, echo=FALSE,cache=TRUE, message=FALSE, warning=FALSE, render=TRUE,fig.width=10}
-i=3
-  model<-fund_holding_style(fund.codes[i],from=froms[i],to=tos[i],frequency='monthly',style=1,constraint=fund.constraints[[i]])
-  params<-model$coefficients[model$coefficients>0.0001]
-  facters<-model$factors[model$coefficients>0.0001]
-  
-  formula<-as.data.frame(matrix(params*100,1,length(params)))
-  colnames(formula)<-facters
-  knitr::kable(formula,digits=2,caption='持仓风格权重分析(%)')
-  
-  pie(params,facters)
-
-```
-
-可见，其重点投资的股票往往都是成长类型的股票。
+`r paste(knit(text=out),collapse='\n')`
 
 
 ## 主动风格:积极
-
-
-以其管理的`r fund.names[1]`为说明，从创建到其接收管理之前，该基金的平均主动管理活跃度为48%，呈现非常激进的主动管理态势；其接管基金后平均主动管理活跃度为30%，表现为积极的主动管理。在其管理的同期，整个基金行业的同类型基金的主动管理活跃指数为30%。因此，*对于`r manager`的管理风格可以定义为积极的主动管理型*
-
 ```{r, echo=FALSE,cache=TRUE, message=FALSE, warning=FALSE, render=TRUE,fig.width=10}
-sqlstr = sprintf("select year,quarter,sum(abs(diff_bogey))/2 as active from fund_industry_weight group by code,year,quarter having code='%s' order by year,quarter;",fund.codes[1])
+sqlstr = sprintf("select year,quarter,sum(abs(diff_bogey))/2 as active,type3 from fund_industry_weight group by code,year,quarter having code='%s' order by year,quarter;",fund.codes[ilong])
 df=sqldf(sqlstr)
 df_ave=sqldf("select ac.year, ac.quarter,avg(ac.active) as active from (select year,quarter,sum(abs(diff_bogey))/2 as active, type3 from fund_industry_weight group by code,year,quarter,type3 order by year,quarter) as ac group by ac.year,ac.quarter,ac.type3 having ac.type3 like '偏股混合型%' order by ac.year,ac.quarter;")
 ```
 
 
+以其管理时间最长的`r fund.names[1]`为说明，从创建到其接收管理之前，该基金的平均主动管理活跃度为48%，呈现非常激进的主动管理态势；其接管基金后平均主动管理活跃度为30%，表现为积极的主动管理。在其管理的同期，整个基金行业的同类型基金的主动管理活跃指数为30%。因此，*对于`r manager`的管理风格可以定义为积极的主动管理型*
+
+
+
 # 能力评价
 
-## 大类资产配置：不稳定
+## 大类资产配置：
 
-从下图可以看出，在管理期间`r manager`在产品`r fund.names[1]`中将股票仓位控制在70-90%之间，而另外一个产品`r fund.names[3]`股票仓位则也类似的在70%-92%之间变换，显示除了主动的仓位调节。
 
-```{r, echo=FALSE,cache=TRUE, message=FALSE, warning=FALSE, render=TRUE,fig.width=10}
-sqlstr = sprintf("select year,quarter,equity_weight from fund_allocation_details where code='%s' order by year,quarter",fund.codes[1])
-df=sqldf(sqlstr)
-report_date<-sprintf("%d Q%d",df$year,df$quarter)
-plot(as.yearqtr(report_date),as.numeric(df[,3]),type='l',xlab='时间',ylab='股票仓位(%)',ylim=c(60,95))
-abline(v=as.yearqtr('2013 Q3'),col = "lightgray")
-abline(v=as.yearqtr('2011 Q2'),col ="lightblue")
-sqlstr = sprintf("select year,quarter,equity_weight from fund_allocation_details where code='%s' order by year,quarter",fund.codes[3])
-df=sqldf(sqlstr)
-report_date<-sprintf("%d Q%d",df$year,df$quarter)
-lines(as.yearqtr(report_date),as.numeric(df[,3]),type='l',col='red')
-abline(v=as.yearqtr('2016 Q1'),col='blue')
+
+```{r,echo=FALSE}
+out=''
+for(i in 1:length(fund.codes))
+{
+  out=c(out,knit_expand('asset-allocation.rmd'))
+}
 ```
+`r paste(knit(text=out),collapse='\n')`
 
 
-
-进一步的计算大类资产配置带来的超额收益。
-
-### `r fund.names[4]`
-
-
-```{r, echo=FALSE,cache=TRUE, fig.width=10, message=FALSE, warning=FALSE, render=TRUE}
-require(scales)
-##need to manually add bogey information
-i=4
-asset_contribution=top_asset_contribution(fund.codes[i],froms[i],tos[i])
-
-return_compare<-data.frame(date=asset_contribution[,2],contribution=asset_contribution[,5]-asset_contribution[,6])
-
-knitr::kable(return_compare,digits=4,caption=paste(fund.names[1],'大类资产配置能力统计',sep=''),col.names=c('日期','大类资产配置超额贡献(%)'))
-```
-```{r,echo=FALSE, fig.width=10, message=FALSE, warning=FALSE, render=TRUE}
-t=t.test(return_compare$contribution,mu=0,alternative='greater',conf.level=0.9)
-test<-data.frame(ave=as.numeric(t$estimate),confidence=sprintf('$[%.2f,\\infty)$',t$conf.int[1]))
-knitr::kable(test,col.names=c('平均超额贡献(%)','90%置信区间'),digits=4)
-
-```
-
-统计显示，在`r fund.names[4]`这支基金的管理上，虽然每季度平均取得 `r test[1,1]`%的配置收益，但是统计意义上还是不显著。
-
-### `r fund.names[1]`
-
-```{r, echo=FALSE,cache=TRUE, fig.width=10, message=FALSE, warning=FALSE, render=TRUE}
-require(scales)
-##need to manually add bogey information
-i=1
-asset_contribution=top_asset_contribution(fund.codes[i],froms[i],tos[i])
-
-return_compare<-data.frame(date=asset_contribution[,2],contribution=asset_contribution[,5]-asset_contribution[,6])
-
-knitr::kable(return_compare,digits=4,caption=paste(fund.names[1],'大类资产配置能力统计',sep=''),col.names=c('日期','大类资产配置超额贡献(%)'))
-```
-```{r,echo=FALSE, fig.width=10, message=FALSE, warning=FALSE, render=TRUE}
-t=t.test(return_compare$contribution,mu=0,alternative='greater',conf.level=0.9)
-test<-data.frame(ave=as.numeric(t$estimate),confidence=sprintf('$[%.2f,\\infty)$',t$conf.int[1]))
-knitr::kable(test,col.names=c('平均超额贡献(%)','90%置信区间'),digits=4)
-
-```
-
-统计显示，在`r fund.names[1]`这支基金的管理上，虽然每季度平均取得`r test[1,1]`%的配置收益，但是统计意义上还是不显著。
-
-### `r fund.names[3]`
-
-
-```{r, echo=FALSE,cache=TRUE, fig.width=10, message=FALSE, warning=FALSE, render=TRUE}
-require(scales)
-##need to manually add bogey information
-i=3
-  asset_contribution=top_asset_contribution(fund.codes[i],froms[i],tos[i])
-  
-  return_compare<-data.frame(date=asset_contribution[,2],contribution=asset_contribution[,5]-asset_contribution[,6])
-  
-  knitr::kable(return_compare,digits=4,caption=paste(fund.names[1],'大类资产配置能力统计',sep=''),col.names=c('日期','大类资产配置超额贡献(%)'))
-  
-  t=t.test(return_compare$contribution,mu=0,alternative='greater',conf.level=0.9)
-  test<-data.frame(ave=as.numeric(t$estimate),confidence=sprintf('$[%.2f,\\infty)$',t$conf.int[1]))
-  knitr::kable(test,col.names=c('平均超额贡献%','90%置信区间'),digits=2)
-
-```
-
-统计显示，在`r fund.names[3]`这支基金的管理上，每季度平均取得 `r test[1,1]`%的配置收益, 统计意义上也不显著。因此`r manager`并没有显示出稳健的大类资产配置的能力。
-
-## 行业配置能力：弱
+## 行业配置能力：
 
 既然基金产品的超额收益并非得益于大类资产的配置，那么比如来自与行业配置、选股以及择时的能力。需要提前指出的是，这三个能力在逻辑与实践中都不是相互独立的。好的投资标的往往也意味着好的投资时机，而好股票的挖掘与选择自然也带来了相应行业的配置偏好。但是这三种能力又在某种程度上可以区别开来，因为它们毕竟是在投资的不同决策层面和时点上的投资活动。我们认为：
 
@@ -364,203 +265,33 @@ i=3
 
 因为所获得数据精确程度的不同，我们计算的以上三个方面能力对于总超额收益的贡献比例可能是不精确的，读者应该更多的关注其相对值以及相关的统计推论。
 
-```{r, echo=FALSE,cache=TRUE, fig.width=10, message=FALSE, warning=FALSE, render=FALSE,results='asis'}
-i=4
-df=industry_contribution(code=fund.codes[i],from=froms[i],to=tos[i])
-win_ratio<-function(x)
+
+```{r,echo=FALSE}
+out=''
+for(i in 1:length(fund.codes))
 {
-  s=sign(x)
-  return(sum(s[s=1])/length(s))
+  out=c(out,knit_expand('industry.rmd'))
 }
-a=aggregate(contribution~yearqtr,df,win_ratio)
-b=aggregate(contribution~yearqtr,df,sum)
-a$total<-b$contribution
-a[,2]=a[,2]*100
-knitr::kable(a,digits=2,caption=paste(fund.names[i],'行业配置能力',sep=''),col.names=c('日期','行业配置成功率%','行业配置贡献超额收益率%'))
-t=t.test(a$total,mu=0,alternative='greater',conf.level=0.9)
-test<-data.frame(ave=as.numeric(t$estimate),confidence=sprintf('$[%.2f,\\infty)$',t$conf.int[1]))
-knitr::kable(test,col.names=c('平均超额贡献%','90%置信区间'),digits=2)
-
 ```
-
-从统计结果可以看出，`r manager`在`r fund.names[i]`基金的管理上没有显示行业配置能力，平均超额表现为`r test[1,1]`%每半年，年化`r ((1+test[1,1]/100)^4-1)*100`%。
-
-
-```{r, echo=FALSE,cache=TRUE, fig.width=10, message=FALSE, warning=FALSE, render=FALSE,results='asis'}
-i=1
-df=industry_contribution(code=fund.codes[i],from=froms[i],to=tos[i])
-win_ratio<-function(x)
-{
-  s=sign(x)
-  return(sum(s[s=1])/length(s))
-}
-a=aggregate(contribution~yearqtr,df,win_ratio)
-b=aggregate(contribution~yearqtr,df,sum)
-a$total<-b$contribution
-a[,2]=a[,2]*100
-knitr::kable(a,digits=2,caption=paste(fund.names[i],'行业配置能力',sep=''),col.names=c('日期','行业配置成功率%','行业配置贡献超额收益率%'))
-t=t.test(a$total,mu=0,alternative='greater',conf.level=0.9)
-test<-data.frame(ave=as.numeric(t$estimate),confidence=sprintf('$[%.2f,\\infty)$',t$conf.int[1]))
-knitr::kable(test,col.names=c('平均超额贡献%','90%置信区间'),digits=2)
-
-```
-
-从统计结果可以看出，`r manager`在`r fund.names[i]`基金的管理上显示了一定的行业配置能力，平均超额表现为`r test[1,1]`%每半年，年化`r ((1+test[1,1]/100)^4-1)*100`%。但是波动较大，统计不显著。
+`r paste(knit(text=out),collapse='\n')`
 
 
-```{r, echo=FALSE,cache=TRUE, fig.width=10, message=FALSE, warning=FALSE, render=FALSE,results='asis'}
-i=2
-df=industry_contribution(code=fund.codes[i],from=froms[i],to=tos[i])
-win_ratio<-function(x)
-{
-  s=sign(x)
-  return(sum(s[s=1])/length(s))
-}
-a=aggregate(contribution~yearqtr,df,win_ratio)
-b=aggregate(contribution~yearqtr,df,sum)
-a$total<-b$contribution
-a[,2]=a[,2]*100
-knitr::kable(a,digits=2,caption=paste(fund.names[i],'行业配置能力',sep=''),col.names=c('日期','行业配置成功率%','行业配置贡献超额收益率%'))
-t=t.test(a$total,mu=0,alternative='greater',conf.level=0.9)
-test<-data.frame(ave=as.numeric(t$estimate),confidence=sprintf('$[%.2f,\\infty)$',t$conf.int[1]))
-knitr::kable(test,col.names=c('平均超额贡献%','90%置信区间'),digits=2)
-
-```
-
-从统计结果可以看出，`r manager`在`r fund.names[i]`基金的管理上显示了一定的行业配置能力，平均超额表现为`r test[1,1]`%每半年，年化`r ((1+test[1,1]/100)^4-1)*100`%。
-
-```{r, echo=FALSE,cache=TRUE, fig.width=10, message=FALSE, warning=FALSE, render=FALSE,results='asis'}
-i=3
-df=industry_contribution(code=fund.codes[i],from=froms[i],to=tos[i])
-win_ratio<-function(x)
-{
-  s=sign(x)
-  return(sum(s[s=1])/length(s))
-}
-a=aggregate(contribution~yearqtr,df,win_ratio)
-b=aggregate(contribution~yearqtr,df,sum)
-a$total<-b$contribution
-a[,2]=a[,2]*100
-knitr::kable(a,digits=2,caption=paste(fund.names[i],'行业配置能力',sep=''),col.names=c('日期','行业配置成功率%','行业配置贡献超额收益率%'))
-t=t.test(a$total,mu=0,alternative='greater',conf.level=0.9)
-test<-data.frame(ave=as.numeric(t$estimate),confidence=sprintf('$[%.2f,\\infty)$',t$conf.int[1]))
-knitr::kable(test,col.names=c('平均超额贡献%','90%置信区间'),digits=2)
-
-```
-
-从统计结果可以看出，`r manager`在`r fund.names[i]`基金的管理上显示了一定的行业配置能力，平均超额表现为`r test[1,1]`%每半年，年化`r ((1+test[1,1]/100)^4-1)*100`%。
-
-## 择股能力：比较强！
+## 择股能力：
 
 公开渠道获得的持仓数据频率为每半年一次。我们依据此数据分析基金管理人的择股能力。当然，由于更新频率粗糙，读者有理由担心计算精度的问题。不过从另外一个角度看，我们所谓的择股能力是对照于择时能力而言获取相对持续的alpha的能力。这里的相对持续，完全可以根据我们研究的需要而定义。此处，定义半年为一个相对持续的alpha的标准，也是合情合理的。当前受制于数据不完整，此项能力分析最早只能回溯到2013年。
 
-```{r,echo=FALSE, fig.width=10, message=FALSE, warning=FALSE, render=FALSE,results='asis'}
-i=4
-df=stock_contribution(code=fund.codes[i],from=max(froms[i],'2013-01-01'),to=tos[i])
-
-win_ratio<-function(x)
+```{r,echo=FALSE}
+out=''
+for(i in 1:length(fund.codes))
 {
-  s=sign(x)
-  return(sum(s[s=1])/length(s))
-}
-if(ncol(df)>0)
-{
-  a=aggregate(industry_return_algo3-bogey_return~report_date,df,win_ratio)
-  b=aggregate(weight_algo3*(industry_return_algo3-bogey_return)~report_date,df,sum)
-  a$total<-b[,2]
-  a[,2]=a[,2]*100
-  
-  print(knitr::kable(a,digits=2,caption=paste(fund.names[i],'择股能力',sep=''),col.names=c('日期','行业择股成功率%','择股贡献超额收益率%')))
-  t=t.test(a$total,mu=0,alternative='greater',conf.level=0.9)
-  test<-data.frame(ave=as.numeric(t$estimate),confidence=sprintf('$[%.2f,\\infty)$',t$conf.int[1]))
-  print(knitr::kable(test,col.names=c('平均超额贡献%','90%置信区间'),digits=2))
+  if(tos[i]>'2013-06-01')
+    out=c(out,knit_expand('industry.rmd'))
 }
 ```
+`r paste(knit(text=out),collapse='\n')`
 
 
-
-从统计结果可以看出，`r manager`在`r fund.names[i]`基金的管理上显示了明显的择股能力——即他能够选择出在未来6个月的投资周期上回报好于对应行业指数表现的股票组合，而且择股能力贡献的平均超额表现高达`r test[1,1]`%每半年,年化`r ((1+test[1,1]/100)^2-1)*100`%。
-
-
-
-```{r,echo=FALSE, fig.width=10, message=FALSE, warning=FALSE, render=FALSE,results='asis'}
-i=1
-df=stock_contribution(code=fund.codes[i],from=max(froms[i],'2013-01-01'),to=tos[i])
-
-win_ratio<-function(x)
-{
-  s=sign(x)
-  return(sum(s[s=1])/length(s))
-}
-if(ncol(df)>0)
-{
-  a=aggregate(industry_return_algo3-bogey_return~report_date,df,win_ratio)
-  b=aggregate(weight_algo3*(industry_return_algo3-bogey_return)~report_date,df,sum)
-  a$total<-b[,2]
-  a[,2]=a[,2]*100
-  
-  print(knitr::kable(a,digits=2,caption=paste(fund.names[i],'择股能力',sep=''),col.names=c('日期','行业择股成功率%','择股贡献超额收益率%')))
-  t=t.test(a$total,mu=0,alternative='greater',conf.level=0.9)
-  test<-data.frame(ave=as.numeric(t$estimate),confidence=sprintf('$[%.2f,\\infty)$',t$conf.int[1]))
-  print(knitr::kable(test,col.names=c('平均超额贡献%','90%置信区间'),digits=2))
-}
-```
-
-
-
-从统计结果可以看出，`r manager`在`r fund.names[i]`基金的管理上显示了明显的择股能力——即他能够选择出在未来6个月的投资周期上回报好于对应行业指数表现的股票组合，而且择股能力贡献的平均超额表现高达`r test[1,1]`%每半年,年化`r ((1+test[1,1]/100)^2-1)*100`%。
-
-```{r, echo=FALSE,cache=TRUE, fig.width=10, message=FALSE, warning=FALSE, render=FALSE,results='asis'}
-i=2
-df=stock_contribution(code=fund.codes[i],from=max(froms[i],'2013-01-01'),to=tos[i])
-
-win_ratio<-function(x)
-{
-  s=sign(x)
-  return(sum(s[s=1])/length(s))
-}
-if(ncol(df)>0)
-{
-  a=aggregate(industry_return_algo3-bogey_return~report_date,df,win_ratio)
-  b=aggregate(weight_algo3*(industry_return_algo3-bogey_return)~report_date,df,sum)
-  a$total<-b[,2]
-  a[,2]=a[,2]*100
-  print(knitr::kable(a,digits=2,caption=paste(fund.names[i],'择股能力',sep=''),col.names=c('日期','行业择股成功率%','择股贡献超额收益率%')))
-  t=t.test(a$total,mu=0,alternative='greater',conf.level=0.9)
-  test<-data.frame(ave=as.numeric(t$estimate),confidence=sprintf('$[%.2f,\\infty)$',t$conf.int[1]))
-  print(knitr::kable(test,col.names=c('平均超额贡献%','90%置信区间'),digits=2))
-}
-```
-
-从统计结果可以看出，`r manager`在`r fund.names[i]`基金的管理上显示了明显的择股能力——即他能够选择出在未来6个月的投资周期上回报好于对应行业指数表现的股票组合，而且择股能力贡献的平均超额表现高达`r test[1,1]`%每半年,年化`r ((1+test[1,1]/100)^2-1)*100`%。须知这是在沪深300成长指数成分股和备选股中选择的股票，能够有这样的表现实属不易。
-
-```{r, echo=FALSE,cache=TRUE, fig.width=10, message=FALSE, warning=FALSE, render=FALSE,results='asis'}
-i=3
-df=stock_contribution(code=fund.codes[i],from=max(froms[i],'2013-01-01'),to=tos[i])
-
-win_ratio<-function(x)
-{
-  s=sign(x)
-  return(sum(s[s=1])/length(s))
-}
-if(ncol(df)>0)
-{
-  a=aggregate(industry_return_algo3-bogey_return~report_date,df,win_ratio)
-  b=aggregate(weight_algo3*(industry_return_algo3-bogey_return)~report_date,df,sum)
-  a$total<-b[,2]
-  a[,2]=a[,2]*100
-  print(knitr::kable(a,digits=2,caption=paste(fund.names[i],'择股能力',sep=''),col.names=c('日期','行业择股成功率%','择股贡献超额收益率%')))
-  t=t.test(a$total,mu=0,alternative='greater',conf.level=0.9)
-  test<-data.frame(ave=as.numeric(t$estimate),confidence=sprintf('$[%.2f,\\infty)$',t$conf.int[1]))
-  print(knitr::kable(test,col.names=c('平均超额贡献%','90%置信区间'),digits=2))
-}
-```
-
-从统计结果可以看出，`r manager`在`r fund.names[i]`基金的管理上显示了明显的择股能力——即他能够选择出在未来6个月的投资周期上回报好于对应行业指数表现的股票组合，而且择股能力贡献的平均超额表现高达`r test[1,1]`%每半年,年化`r ((1+test[1,1]/100)^2-1)*100`%。
-
-当然，我们也需要客观的指出，`r manager`的超强的择股能力的一部分贡献，来自与2015年上半年，他在多只基金中的亮眼表现。尽管我们在计算择股能力的时候，使用的是超额收益，即减去参照指标（一般是沪深300指数）后的超出部分。按理已经排除了牛市的影响，将其完全归集为择股能力并无问题。但是需要指出，中国市场的问题很多，尤其牛市期间，“妖股”频出。这些不可言状的“妖股”，也许成就了基金经理人的辉煌人生，不无不可，毕竟“人脉”或者“运气”也是能力的一部分。但就以此建立一个择股能力的最高标杆，则误导大众了。因此可以考虑将这段时间的数据排除出去进行分析。那样的话，我们得出王培的择股能力也是比较强的（当然，不再是超强）。
-
-## 择时能力：灾难性
+## 择时能力：
 择时能力在本文的设定中包括以下方面：
 
 * 交易周期短于半年的动态alpha机会，如一些短期事件性投资机会、相对明确的业绩反转预期等。
@@ -569,57 +300,14 @@ if(ncol(df)>0)
 
 所以择时能力并不总是能够带来正的超额收益，但是它能够确保落袋为安（止盈能力）或者保命再战（止亏能力），对于提高基金的风险收益比（如夏普率）是十分重要的。
 
-```{r, echo=FALSE,cache=TRUE, fig.width=10, message=FALSE, warning=FALSE, render=FALSE,results='asis'}
-i=4
-df=timing_contribution(fund.codes[i],from=max(froms[i],'2013-01-01'),to=tos[i])
-print(knitr::kable(df,digits=2,caption=paste(fund.names[i],'择时能力',sep=''),col.names=c('日期','择时能力贡献超额收益率%')))
-t=t.test(df[,2],mu=0,alternative='greater',conf.level=0.9)
-test<-data.frame(ave=as.numeric(t$estimate),confidence=sprintf('$[%.2f,\\infty)$',t$conf.int[1]))
-print(knitr::kable(test,col.names=c('平均超额贡献%','90%置信区间'),digits=2))
+```{r,echo=FALSE}
+out=''
+for(i in 1:length(fund.codes))
+{
+  out=c(out,knit_expand('industry.rmd'))
+}
 ```
-
-从上表中可以看出，`r manager`在`r fund.names[i]`基金的管理上显示了明显的负的择时能力，而且择时能力贡献的平均超额表现多达`r test[1,1]`%每半年,年化`r ((1+test[1,1]/100)^2-1)*100`%。
-
-
-```{r, echo=FALSE,cache=TRUE, fig.width=10, message=FALSE, warning=FALSE, render=FALSE,results='asis'}
-i=1
-df=timing_contribution(fund.codes[i],from=max(froms[i],'2013-01-01'),to=tos[i])
-print(knitr::kable(df,digits=2,caption=paste(fund.names[i],'择时能力',sep=''),col.names=c('日期','择时能力贡献超额收益率%')))
-t=t.test(df[,2],mu=0,alternative='greater',conf.level=0.9)
-test<-data.frame(ave=as.numeric(t$estimate),confidence=sprintf('$[%.2f,\\infty)$',t$conf.int[1]))
-print(knitr::kable(test,col.names=c('平均超额贡献%','90%置信区间'),digits=2))
-```
-
-从上表中可以看出，`r manager`在`r fund.names[i]`基金的管理上显示了明显的负的择时能力，而且择时能力贡献的平均超额表现多达`r test[1,1]`%每半年,年化`r ((1+test[1,1]/100)^2-1)*100`%。
-
-```{r, echo=FALSE,cache=TRUE, fig.width=10, message=FALSE, warning=FALSE, render=FALSE,results='asis'}
-i=2
-df=timing_contribution(fund.codes[i],from=max(froms[i],'2013-01-01'),to=tos[i])
-print(knitr::kable(df,digits=2,caption=paste(fund.names[i],'择时能力',sep=''),col.names=c('日期','择时能力贡献超额收益率%')))
-t=t.test(df[,2],mu=0,alternative='greater',conf.level=0.9)
-test<-data.frame(ave=as.numeric(t$estimate),confidence=sprintf('$[%.2f,\\infty)$',t$conf.int[1]))
-print(knitr::kable(test,col.names=c('平均超额贡献%','90%置信区间'),digits=2))
-```
-
-从上表中可以看出，`r manager`在`r fund.names[i]`基金的管理上显示了明显的负的择时能力，而且择时能力贡献的平均超额表现多达`r test[1,1]`%每半年,年化`r ((1+test[1,1]/100)^2-1)*100`%。
-
-
-```{r, echo=FALSE,cache=TRUE, fig.width=10, message=FALSE, warning=FALSE, render=FALSE,results='asis'}
-i=3
-df=timing_contribution(fund.codes[i],from=max(froms[i],'2013-01-01'),to=tos[i])
-print(knitr::kable(df,digits=2,caption=paste(fund.names[i],'择时能力',sep=''),col.names=c('日期','择时能力贡献超额收益率%')))
-t=t.test(df[,2],mu=0,alternative='greater',conf.level=0.9)
-test<-data.frame(ave=as.numeric(t$estimate),confidence=sprintf('$[%.2f,\\infty)$',t$conf.int[1]))
-print(knitr::kable(test,col.names=c('平均超额贡献%','90%置信区间'),digits=2))
-```
-
-从上表中可以看出，`r manager`在`r fund.names[i]`基金的管理上显示了不太显著的的择时能力，而且择时能力贡献的平均超额表现为`r test[1,1]`%每半年,年化`r ((1+test[1,1]/100)^2-1)*100`%。
-
-
-
-综上，我们认为`r manager`作为一名风格多变的成长股投资者，他在择时能力上的表现是灾难性的。减少追涨杀跌或者增加持股时间或可带来表现上的改变。
-
-
+`r paste(knit(text=out),collapse='\n')`
 
 
 # 投资方法体系

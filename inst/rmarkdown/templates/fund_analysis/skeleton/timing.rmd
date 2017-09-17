@@ -1,0 +1,57 @@
+
+### `r fund.names[i]`中表现的择时能力
+
+
+```{r, echo=FALSE,cache=TRUE, fig.width=10, message=FALSE, warning=FALSE, render=TRUE}
+df=timing_contribution(fund.codes[i],from=max(froms[i],'2013-01-01'),to=tos[i])
+print(knitr::kable(df,digits=2,caption=paste(fund.names[i],'择时能力',sep=''),col.names=c('日期','择时能力贡献超额收益率%')))
+t=t.test(df[,2],mu=0,alternative='greater',conf.level=0.9)
+test<-data.frame(ave=as.numeric(t$estimate),confidence=sprintf('$[%.2f,\\infty)$',t$conf.int[1]))
+knitr::kable(test,col.names=c('平均超额贡献%','90%置信区间'),digits=2)
+
+if(test[1,1]>2)
+{
+  pon = '超乎寻常'
+}else
+  {
+    if(test[1,1]>1)
+    {
+      pon='优异'
+    }
+    else
+    {
+      if(test[1,1]>0)
+        pon = '正'
+      else
+      { 
+        if(test[1,1]>-1)
+          pon = '负'
+        else
+          pon ='糟糕'
+      }
+    }
+  }
+ratio=as.numeric(t$estimate)/(as.numeric(t$estimate)-t$conf.int[1])
+if(ratio>1)
+{
+  sig<-'而且是统计显著的正的行业配置能力'
+}else
+  {
+    if(ratio>0.5)
+    {
+      sig<-'虽然统计不显著，但是在复杂多变的市场情况下，还是可以认为管理者展现了一定的行业配置能力'
+    }else
+      {
+        if(ratio>-0.2)
+        {
+          sig<-'几乎没有显示出行业配置的能力'
+        }else
+        {
+          sig<-'行业错配'
+        }
+    }
+  }
+
+```
+从统计结果可以看出，`r manager`在`r fund.names[i]`基金的管理上显示`r pon`的择时能力，平均超额表现为`r test[1,1]`%每半年，年化`r ((1+test[1,1]/100)^2-1)*100`%，`r sig`。
+
